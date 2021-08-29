@@ -72,9 +72,9 @@ def get_book_infos(url_of_book):
         image_soup = html_soup.find("div", {"class": "item active"}).find("img") #On crée un objet image.soup qui permet de trouver les images recherchées.
         image_src = image_soup["src"] #puis on indique avec un objet image_src que l'objet_soup est repéré par le tag "src" (qui veut dire source).
         url_1 = "https://books.toscrape.com/a/b/"
-        link = urljoin(url_1, image_src) #on récupère une (des) url(s) complète(s)
+        image_url = urljoin(url_1, image_src) #on récupère une (des) url(s) complète(s)
         
-        image_response = get(link, stream=True) #Avec image_response on recherche les urls complètes des images avec "get"
+        image_response = get(image_url, stream=True) #Avec image_response on recherche les urls complètes des images avec "get"
 
         with open(UPC + '.png', 'wb') as out_file: #On stocke les images dans le dossier contenant ce programme et on fait varier les images en même temps que le UPC qui est un format en dynamique (on aurait pu choisir un autre des paramètres du results cela aurait été pareil). et la terminaison ce sont des ".png"
             shutil.copyfileobj(image_response.raw, out_file) # shutil.copyfile() method in Python est utilisé pour copier le contenu d'un fichier source vers un fichier destination.
@@ -101,11 +101,11 @@ def get_book_infos(url_of_book):
             stars.append(review_rating)
 
         #On remplit le tableau book_data avec les données demandés par SAM et on rajoute un headers qui contient les en-têtes, il faut que les données correspondent dans le même ordre !
-        return [UPC, title, Price_including_tax, Price_excluding_tax, Availability, Numbers_of_review, product_description,review_rating, image_src]
+        return [UPC, title, Price_including_tax, Price_excluding_tax, Availability, Numbers_of_review, product_description,review_rating, image_url]
 
 def fonction_csv(data_of_books,category_name):
-    headers = [ "UPC", "title" , "Price_including_tax", "Price_excluding_tax" , "Availability" , "Numbers_of_review", "product_description" , "review_rating" ,  "image_src" ]
-    with open(category_name + '.csv', mode='w', encoding= 'UTF-8-SIG') as csv_file:
+    headers = [ "UPC", "title" , "Price_including_tax", "Price_excluding_tax" , "Availability" , "Numbers_of_review", "product_description" , "review_rating" ,  "image_url" ]
+    with open(category_name + '.csv', mode='w',newline='', encoding= 'UTF-8-SIG') as csv_file:
         writer = csv.writer(csv_file, delimiter=';') #On met un délimiteur pour séparer les informations écrites dans les différents csv pour chacune des données recueillies.
         writer.writerow(headers)  #On écrit les en-têtes.
         for data in data_of_books:  #Pour les données dans Book_data écrire les data (données).
