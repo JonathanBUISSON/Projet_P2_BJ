@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import csv
 from urllib.parse import urljoin
 
+
 def get_categories(url_standard):
     home_response = get(url_standard)
     if home_response.ok:
@@ -17,11 +18,11 @@ def get_objects(category_url):
     objects=[]
     if response.ok:
         html_soup = BeautifulSoup(response.content, features='html.parser')  
+        next_page = html_soup.find('li', class_='next') 
         obj = html_soup.find_all("div", {"class": "image_container"})
         for book in obj:
             book_url = get_book_link(book)# récupère l'url de chaque livre
-            objects.append(book_url)
-        next_page = html_soup.find('li', class_='next')
+            objects.append(book_url) #Pour la première page
         while next_page:
             if 'index.html' in url_category:
                 url_category = url_category.replace('index.html', next_page.find('a')['href'])
@@ -31,10 +32,10 @@ def get_objects(category_url):
                 url_category = url_category[:len(url_category) - 1]
             response = get(url_category)
             soup = BeautifulSoup(response.content, features='html.parser')
-            obj = html_soup.find_all("div", {"class": "image_container"})
+            obj = soup.find_all("div", {"class": "image_container"})
             for book in obj:
-                book_url = get_book_link(book)# récupère l'url de chaque livre
-                objects.append(book_url)
+                book_url = get_book_link(book)
+                objects.append(book_url) #Pour l'ensemble des pages
             next_page = soup.find('li', class_='next')
     return objects
 
@@ -51,15 +52,14 @@ def get_book_infos(url_of_book):
     response_book = get(url_of_book) 
     if response_book.ok:
         html_soup = BeautifulSoup(response_book.content, features='html.parser')
-        table = html_soup.find("table", {"class": "table table-striped"}) #On pointe vers l'élément recherché.
-        results = table.find_all("td") #Parmi les tags "td" on dit cherche moi tous les tags td (d'ou le find.all).
-        title = html_soup.find("h1").text.strip() #Pour le titre, on cherche le tag "h1"
+        table = html_soup.find("table", {"class": "table table-striped"})
+        results = table.find_all("td") .
+        title = html_soup.find("h1").text.strip() 
         if html_soup.find("div", {"id": "product_description"}):
             proddesc = html_soup.find("div", {"id": "product_description"}).findNext("p")
             product_description = proddesc.text
         else:
             product_description = "No description available"
-        #print(product_description)
         #On utilise un tableau results avec index (et l'index en python commence à zéro) et on utilise la methode .strip() qui enlève les espaces en début et en fin de mot.
         UPC = results[0].text.strip()  
         Product_type = results[1].text.strip()
@@ -72,13 +72,13 @@ def get_book_infos(url_of_book):
         image_soup = html_soup.find("div", {"class": "item active"}).find("img") #On crée un objet image.soup qui permet de trouver les images recherchées.
         image_src = image_soup["src"] #puis on indique avec un objet image_src que l'objet_soup est repéré par le tag "src" (qui veut dire source).
         url_1 = "https://books.toscrape.com/a/b/"
-        image_url = urljoin(url_1, image_src) #on récupère une (des) url(s) complète(s)
+        image_url = urljoin(url_1, image_src) 
         
-        image_response = get(image_url, stream=True) #Avec image_response on recherche les urls complètes des images avec "get"
+        image_response = get(image_url, stream=True) #On recherche les urls complètes des images avec "get"
 
-        with open(UPC + '.png', 'wb') as out_file: #On stocke les images dans le dossier contenant ce programme et on fait varier les images en même temps que le UPC qui est un format en dynamique (on aurait pu choisir un autre des paramètres du results cela aurait été pareil). et la terminaison ce sont des ".png"
+        with open(UPC + '.png', 'wb') as out_file: #On stocke les images dans le dossier contenant ce programme.
             shutil.copyfileobj(image_response.raw, out_file) # shutil.copyfile() method in Python est utilisé pour copier le contenu d'un fichier source vers un fichier destination.
-        del image_response # del permet d'effacer image_response pour ne pas tout le temps avoir la même image.
+        del image_response 
         
         stars = [] #On crée un tableau vide stars qui contiendra en fonction des tag "p" rencontrés et de la classe si le livre est côté à 1 ou plusieurs étoiles voire à aucune étoile (dernière condition).
         if html_soup.find("p", {"class": "star-rating One"}):
@@ -106,11 +106,10 @@ def get_book_infos(url_of_book):
 def fonction_csv(data_of_books,category_name):
     headers = [ "UPC", "title" , "Price_including_tax", "Price_excluding_tax" , "Availability" , "Numbers_of_review", "product_description" , "review_rating" ,  "image_url" ]
     with open(category_name + '.csv', mode='w',newline='', encoding= 'UTF-8-SIG') as csv_file:
-        writer = csv.writer(csv_file, delimiter=';') #On met un délimiteur pour séparer les informations écrites dans les différents csv pour chacune des données recueillies.
-        writer.writerow(headers)  #On écrit les en-têtes.
-        for data in data_of_books:  #Pour les données dans Book_data écrire les data (données).
+        writer = csv.writer(csv_file, delimiter=';')
+        writer.writerow(headers) 
+        for data in data_of_books:  
             writer.writerow(data)
-
 
 if __name__ == '__main__':
     url_home = "http://books.toscrape.com"
